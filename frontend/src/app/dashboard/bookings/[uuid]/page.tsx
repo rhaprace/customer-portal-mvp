@@ -3,23 +3,9 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { jobsApi, Job, Attachment, Message } from '@/lib/api';
-import ProtectedRoute from '@/components/ProtectedRoute';
-import Header from '@/components/Header';
-
-function getStatusColor(status: string) {
-  switch (status.toLowerCase()) {
-    case 'completed':
-      return 'bg-green-100 text-green-800';
-    case 'in progress':
-      return 'bg-blue-100 text-blue-800';
-    case 'scheduled':
-      return 'bg-yellow-100 text-yellow-800';
-    case 'quote':
-      return 'bg-purple-100 text-purple-800';
-    default:
-      return 'bg-gray-100 text-gray-800';
-  }
-}
+import PageLayout from '@/components/layout/PageLayout';
+import StateHandler from '@/components/ui/StateHandler';
+import StatusBadge from '@/components/ui/StatusBadge';
 
 function AttachmentsList({ attachments }: { attachments: Attachment[] }) {
   if (attachments.length === 0) {
@@ -176,33 +162,18 @@ function BookingDetail() {
         if (attachRes.data?.attachments) {
           setAttachments(attachRes.data.attachments);
         }
-      } catch (err) {
+      } catch {
         setError('Failed to load booking');
       } finally {
         setIsLoading(false);
       }
     }
-
     fetchData();
   }, [uuid]);
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
-
-  if (error || !job) {
-    return (
-      <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
-        {error || 'Booking not found'}
-      </div>
-    );
-  }
-
   return (
+    <StateHandler isLoading={isLoading} error={error || (!job ? 'Booking not found' : '')}>
+      {job && (
     <div className="space-y-6">
       <button
         onClick={() => router.back()}
@@ -217,9 +188,7 @@ function BookingDetail() {
           <div>
             <div className="flex items-center space-x-3">
               <h2 className="text-2xl font-bold text-gray-900">{job.generated_job_id}</h2>
-              <span className={`px-3 py-1 text-sm font-medium rounded-full ${getStatusColor(job.status)}`}>
-                {job.status}
-              </span>
+              <StatusBadge status={job.status} size="md" />
             </div>
             <p className="mt-1 text-black">{job.job_description}</p>
           </div>
@@ -262,18 +231,15 @@ function BookingDetail() {
         </div>
       </div>
     </div>
+      )}
+    </StateHandler>
   );
 }
 
 export default function BookingDetailPage() {
   return (
-    <ProtectedRoute>
-      <div className="min-h-screen bg-gray-100">
-        <Header />
-        <main className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-          <BookingDetail />
-        </main>
-      </div>
-    </ProtectedRoute>
+    <PageLayout>
+      <BookingDetail />
+    </PageLayout>
   );
 }
