@@ -16,43 +16,22 @@ A customer portal integrating with ServiceM8 API for booking management.
 - Node.js 18+
 - npm
 
-## Setup
-
-### 1. Install Dependencies
+## Quick Start
 
 ```bash
-cd backend && npm install
-cd ../frontend && npm install
-```
+# 1. Install all dependencies
+npm run install:all
 
-### 2. Configure Environment
-
-**Backend** (`backend/.env`):
-```env
+# 2. Configure backend/.env
 SERVICEM8_API_KEY=your_api_key_here
 PORT=3001
 JWT_SECRET=your-secret-key
+
+# 3. Start both servers
+npm start
 ```
 
-**Frontend** (`frontend/.env.local`):
-```env
-NEXT_PUBLIC_API_URL=http://localhost:3001
-```
-
-### 3. Run Application
-
-```bash
-# Terminal 1 - Backend
-cd backend && npm start
-
-# Terminal 2 - Frontend
-cd frontend && npm run dev
-```
-
-### 4. Access
-
-- **Frontend**: http://localhost:3000
-- **Backend**: http://localhost:3001
+**Access:** http://localhost:3002 (Frontend) | http://localhost:3001 (Backend)
 
 ## Demo Login
 

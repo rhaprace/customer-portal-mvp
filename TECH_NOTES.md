@@ -1,48 +1,49 @@
 # Technical Notes - Customer Portal MVP
 
-## Overview
+## What Was Built
 
-This document outlines the technical decisions, assumptions, and implementation details for the Customer Portal MVP that integrates with ServiceM8.
+A customer-facing portal that allows ServiceM8 customers to:
 
----
+| Feature | Description |
+|---------|-------------|
+| **Authentication** | Login with email + phone number (verified against ServiceM8 contacts) |
+| **Booking List** | View all jobs linked to customer's company |
+| **Booking Details** | Access job information, status, address, and invoice amount |
+| **File Attachments** | View photos and documents attached to jobs |
+| **Messaging** | Send messages to service provider (persisted locally) |
 
-## Architecture
+### Tech Stack
 
-| Layer | Technology | Rationale |
-|-------|------------|-----------|
-| Frontend | Next.js 16, TypeScript, Tailwind CSS | Modern React framework with type safety and rapid styling |
-| Backend | Express.js, Node.js | Lightweight, flexible API server |
-| Database | SQLite (better-sqlite3) | Zero-configuration, portable persistence |
-| External API | ServiceM8 REST API | Real-time job and customer data |
-
----
-
-## ServiceM8 API Integration
-
-### Endpoints Implemented
-| Endpoint | Purpose |
-|----------|---------|
-| `GET /companycontact.json` | Customer lookup by email |
-| `GET /company/{uuid}.json` | Company details retrieval |
-| `GET /job.json` | Fetch jobs filtered by company |
-| `GET /attachment.json` | Job attachments (photos, documents) |
-| `GET /jobactivity.json` | Scheduled activities |
-
-### Authentication
-- API Key via `X-API-Key` header
-- Supports both live API and mock data fallback for development
+| Layer | Technology | Why |
+|-------|------------|-----|
+| Frontend | Next.js 16, TypeScript, Tailwind | Type safety, fast development, modern React patterns |
+| Backend | Express.js | Lightweight, flexible, quick to scaffold |
+| Database | SQLite | Zero-config, portable, no external dependencies |
+| API | ServiceM8 REST | Direct integration with existing business data |
 
 ---
 
-## Key Assumptions
+## Reasoning Behind Approach
 
-1. **Customer Identity**: Customers authenticate using email + phone number matching ServiceM8 company contact records
+| Assumption | Implementation | Rationale |
+|------------|----------------|-----------|
+| **Customer Identity** | Email + phone verification against ServiceM8 contacts | No dedicated customer auth in ServiceM8; dual-factor provides basic security without passwords |
+| **Data Isolation** | Filter jobs by `company_uuid` | Ensures customers only see their own bookings; prevents cross-tenant data exposure |
+| **Local Messaging** | SQLite persistence for messages | ServiceM8 lacks customer-facing messaging API; local storage enables feature without external dependency |
+| **Session Duration** | 24-hour token expiry | Balances security with usability for typical customer portal usage patterns |
+| **Phone Format** | Strip non-digits for comparison | Handles variations (spaces, dashes, parentheses) in user input vs stored data |
+| **Mock Fallback** | Automatic switch based on API key presence | Enables development/testing without live API credentials |
 
-2. **Data Scope**: Customers view only jobs linked to their `company_uuid`
+### ServiceM8 API Usage
 
-3. **Messaging**: Messages persist locally (SQLite) as ServiceM8 lacks a customer-facing messaging endpoint
+| Endpoint | Used For |
+|----------|----------|
+| `GET /companycontact.json` | Find customer by email during login |
+| `GET /company/{uuid}.json` | Get company details (name, phone) |
+| `GET /job.json?$filter=company_uuid eq '{uuid}'` | Fetch customer's bookings |
+| `GET /attachment.json?$filter=related_object_uuid eq '{job_uuid}'` | Get job attachments |
 
-4. **Session Management**: Token-based authentication with 24-hour expiry
+**Why these endpoints?** ServiceM8 structures data around companies (customers) and jobs (bookings). The `company_uuid` relationship links customers to their jobs, enabling secure data isolation.
 
 ---
 
